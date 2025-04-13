@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classcheck.in - Interactive Orbit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f0f4ff;
+            --center-bg-color: rgba(255, 255, 255, 0.6);
+            --center-border-color: #4f46e5;
+            --center-text-color: #4f46e5;
+            --subtitle-text-color: #6366f1;
+            --item-bg-color: rgba(255, 255, 255, 0.7);
+            --item-border-color: rgba(79, 70, 229, 0.2);
+            --item-hover-bg-color: rgba(255, 255, 255, 0.95);
+            --item-hover-border-color: #4f46e5;
+            --item-active-bg-color: #10b981;
+            --item-active-border-color: #6ee7b7;
+            --small-icon-bg-color: rgba(129, 140, 248, 0.5);
+            --icon-color-dashboard: #ff4500;
+            --icon-color-ui: #ffd700;
+            --icon-color-streaks: #00ffff;
+            --icon-color-vibes: #32cd32;
+            --icon-color-quickadd: #ff00ff;
+            --icon-color-reflection: #ff69b4;
+            --icon-color-eastereggs: #40e0d0;
+            --icon-color-widgets: #ff8c00;
+            --small-svg-color-1: #f87171;
+            --small-svg-color-2: #fbbf24;
+            --small-svg-color-3: #34d399;
+            --small-svg-color-4: #60a5fa;
+            --small-svg-color-5: #a78bfa;
+            --small-svg-color-6: #f472b6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--center-text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        .feature-orbit-container {
+            position: relative;
+            width: 450px;
+            height: 450px;
+            margin: 50px auto;
+            cursor: pointer; /* Indicate interaction possible for audio start */
+        }
+
+        .feature-orbit-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            border: 3px solid var(--center-border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: var(--center-text-color);
+            background-color: var(--center-bg-color);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), border-color 0.5s ease, background-color 0.5s ease, color 0.5s ease;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2), 0 0 0 5px rgba(79, 70, 229, 0.05);
+            cursor: default;
+            z-index: 10;
+            padding: 15px;
+        }
+
+        .feature-orbit-center-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+
+        .feature-orbit-subtitle {
+            font-size: 0.8rem;
+            color: var(--subtitle-text-color);
+            line-height: 1.3;
+             transition: color 0.5s ease;
+        }
+
+        .feature-orbit-item {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--item-bg-color);
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out, opacity 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--item-border-color);
+            backdrop-filter: blur(5px);
+            transform-origin: center center;
+            will-change: transform;
+            z-index: 5;
+        }
+
+        .feature-orbit-container.is-hovering .feature-orbit-item:not(.hover-target) {
+             opacity: 0.6;
+        }
+
+        .feature-orbit-item.hover-target {
+            background-color: var(--item-hover-bg-color);
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25);
+            border-color: var(--item-hover-border-color);
+            z-index: 6;
+            opacity: 1;
+        }
+
+        .feature-orbit-icon {
+            width: 35px;
+            height: 35px;
+            color: var(--icon-color);
+             transition: color 0.5s ease;
+        }
+        [data-feature="dashboard"] .feature-orbit-icon { color: var(--icon-color-dashboard); }
+        [data-feature="ui"] .feature-orbit-icon { color: var(--icon-color-ui); }
+        [data-feature="streaks"] .feature-orbit-icon { color: var(--icon-color-streaks); }
+        [data-feature="vibes"] .feature-orbit-icon { color: var(--icon-color-vibes); }
+        [data-feature="quickadd"] .feature-orbit-icon { color: var(--icon-color-quickadd); }
+        [data-feature="reflection"] .feature-orbit-icon { color: var(--icon-color-reflection); }
+        [data-feature="eastereggs"] .feature-orbit-icon { color: var(--icon-color-eastereggs); }
+        [data-feature="widgets"] .feature-orbit-icon { color: var(--icon-color-widgets); }
+
+        .feature-orbit-item.active {
+            background-color: var(--item-active-bg-color);
+            border-color: var(--item-active-border-color);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.8), 0 0 10px rgba(255, 255, 255, 0.5) inset;
+        }
+
+        .small-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: var(--small-icon-bg-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            z-index: 1;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out, background-color 0.5s ease;
+            will-change: transform, opacity;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .small-icon svg {
+            width: 8px;
+            height: 8px;
+            transition: fill 0.5s ease;
+        }
+        .small-icon:nth-child(6n+1) svg { fill: var(--small-svg-color-1); }
+        .small-icon:nth-child(6n+2) svg { fill: var(--small-svg-color-2); }
+        .small-icon:nth-child(6n+3) svg { fill: var(--small-svg-color-3); }
+        .small-icon:nth-child(6n+4) svg { fill: var(--small-svg-color-4); }
+        .small-icon:nth-child(6n+5) svg { fill: var(--small-svg-color-5); }
+        .small-icon:nth-child(6n+0) svg { fill: var(--small-svg-color-6); }
+
+        .small-icon.disrupted {
+            transform: scale(0) !important;
+            opacity: 0 !important;
+        }
+
+        @keyframes rotateCenter {
+            0% { transform: translate(-50%, -50%) scale(1.0); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+            100% { transform: translate(-50%, -50%) scale(1.0); }
+        }
+
+        .feature-orbit-center.rotate {
+            animation: rotateCenter 0.6s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div class="feature-orbit-container" id="orbit-container">
+        <div class="feature-orbit-center" id="orbit-center">
+        </div>
+
+        <div class="feature-orbit-item" data-feature="dashboard">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="ui">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M10 3L8.84 7.33 5 8.21l3.16 2.5.19 3.96L12 13.4l3.65 1.27.19-3.96L19 8.21l-3.84-.88L14 3l-1.16 4.33L10 3zm4.79 10.88l-1.13 4.33L12 19.4l-1.66-1.19-1.13-4.33 3.79-.88 3.79.88zM5.16 14.21l.19 3.96L9 19.4l-1.66-1.19L5.16 14.21zm13.68 0l-2.18 3.96L15 19.4l.19-3.96 3.65-1.23z"/></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="streaks">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="vibes">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="quickadd">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 10 20 15 15 20"></polyline><path d="M4 4v7a4 4 0 0 0 4 4h12"></path></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="reflection">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5zM12 6a6.48 6.48 0 0 0-6 6.48c0 .79.14 1.56.4 2.28l-.46 1.37L4.1 19.9l3.77-1.26a6.48 6.48 0 0 0 7.66 0L19.3 19.9l-1.84-3.77.46-1.37A6.48 6.48 0 0 0 12 6zm1.88 6.13l-1.4 1.41-1.4-1.41a1.93 1.93 0 0 0-2.72 0 1.94 1.94 0 0 0 0 2.72l4.12 4.12 4.12-4.12a1.94 1.94 0 0 0 0-2.72 1.93 1.93 0 0 0-2.72 0z"></path></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="eastereggs">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 3h12l4 6-10 12L2 9l4-6zm1.8 2L4.5 9h15L16.2 5H7.8zM12 10.5l6.4 7.5H5.6L12 10.5z"></path></svg>
+        </div>
+        <div class="feature-orbit-item" data-feature="widgets">
+             <svg class="feature-orbit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        </div>
+
+        <div id="small-icon-container">
+        </div>
+    </div>
+
+    <script>
+        const orbitContainer = document.getElementById('orbit-container');
+        const orbitCenter = document.getElementById('orbit-center');
+        const orbitItems = document.querySelectorAll('.feature-orbit-item');
+        const smallIconContainer = document.getElementById('small-icon-container');
+
+        let orbitRadius = 0;
+        let innerRadius = 0;
+        let animationFrameId = null;
+        const rotationSpeed = 0.0005;
+
+        const defaultTitle = "Classcheck.in";
+        const defaultSubtitle = "Explore the Features";
+
+        const NUM_SMALL_ICONS = 6;
+        const SMALL_ICON_SPEED = 0.5;
+        const smallIcons = [];
+
+        const smallIconSVGs = [
+            `<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="5"/></svg>`,
+            `<svg viewBox="0 0 10 10"><rect width="10" height="10"/></svg>`,
+            `<svg viewBox="0 0 10 10"><polygon points="5 0, 10 10, 0 10"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M17.2 3H6.8l-3.6 6.24v7.52l3.6 6.24h10.4l3.6-6.24v-7.52L17.2 3z"/></svg>`,
+            `<svg viewBox="0 0 10 10"><polygon points="5 0, 10 5, 5 10, 0 5"/></svg>`
+        ];
+
+        const themes = [
+            { // Default Theme (Light Blue)
+                '--bg-color': '#f0f4ff', '--center-bg-color': 'rgba(255, 255, 255, 0.6)', '--center-border-color': '#4f46e5', '--center-text-color': '#4f46e5', '--subtitle-text-color': '#6366f1', '--item-bg-color': 'rgba(255, 255, 255, 0.7)', '--item-border-color': 'rgba(79, 70, 229, 0.2)', '--item-hover-bg-color': 'rgba(255, 255, 255, 0.95)', '--item-hover-border-color': '#4f46e5', '--item-active-bg-color': '#10b981', '--item-active-border-color': '#6ee7b7', '--small-icon-bg-color': 'rgba(129, 140, 248, 0.5)', '--icon-color-dashboard': '#ff4500', '--icon-color-ui': '#ffd700', '--icon-color-streaks': '#00ffff', '--icon-color-vibes': '#32cd32', '--icon-color-quickadd': '#ff00ff', '--icon-color-reflection': '#ff69b4', '--icon-color-eastereggs': '#40e0d0', '--icon-color-widgets': '#ff8c00', '--small-svg-color-1': '#f87171', '--small-svg-color-2': '#fbbf24', '--small-svg-color-3': '#34d399', '--small-svg-color-4': '#60a5fa', '--small-svg-color-5': '#a78bfa', '--small-svg-color-6': '#f472b6'
+            },
+            { // Dark Theme
+                '--bg-color': '#1f2937', '--center-bg-color': 'rgba(55, 65, 81, 0.7)', '--center-border-color': '#818cf8', '--center-text-color': '#e0e7ff', '--subtitle-text-color': '#a5b4fc', '--item-bg-color': 'rgba(75, 85, 99, 0.6)', '--item-border-color': 'rgba(129, 140, 248, 0.3)', '--item-hover-bg-color': 'rgba(55, 65, 81, 0.9)', '--item-hover-border-color': '#a5b4fc', '--item-active-bg-color': '#34d399', '--item-active-border-color': '#a7f3d0', '--small-icon-bg-color': 'rgba(99, 102, 241, 0.5)', '--icon-color-dashboard': '#fb923c', '--icon-color-ui': '#fde047', '--icon-color-streaks': '#22d3ee', '--icon-color-vibes': '#4ade80', '--icon-color-quickadd': '#f472b6', '--icon-color-reflection': '#fda4af', '--icon-color-eastereggs': '#67e8f9', '--icon-color-widgets': '#fbbf24', '--small-svg-color-1': '#fb7185', '--small-svg-color-2': '#facc15', '--small-svg-color-3': '#4ade80', '--small-svg-color-4': '#38bdf8', '--small-svg-color-5': '#c084fc', '--small-svg-color-6': '#f0abfc',
+            },
+             { // Pastel Theme
+                '--bg-color': '#fff7ed', '--center-bg-color': 'rgba(255, 255, 255, 0.7)', '--center-border-color': '#fbbf24', '--center-text-color': '#d97706', '--subtitle-text-color': '#f59e0b', '--item-bg-color': 'rgba(255, 255, 255, 0.8)', '--item-border-color': 'rgba(251, 191, 36, 0.3)', '--item-hover-bg-color': 'rgba(255, 255, 255, 1)', '--item-hover-border-color': '#f59e0b', '--item-active-bg-color': '#a7f3d0', '--item-active-border-color': '#6ee7b7', '--small-icon-bg-color': 'rgba(253, 186, 116, 0.5)', '--icon-color-dashboard': '#f87171', '--icon-color-ui': '#facc15', '--icon-color-streaks': '#fb923c', '--icon-color-vibes': '#a3e635', '--icon-color-quickadd': '#4ade80', '--icon-color-reflection': '#fb7185', '--icon-color-eastereggs': '#38bdf8', '--icon-color-widgets': '#c084fc', '--small-svg-color-1': '#fda4af', '--small-svg-color-2': '#fde047', '--small-svg-color-3': '#86efac', '--small-svg-color-4': '#7dd3fc', '--small-svg-color-5': '#d8b4fe', '--small-svg-color-6': '#f9a8d4',
+            }
+        ];
+        let currentThemeIndex = 0;
+
+        let hoverSynth, clickSynth;
+        let isAudioContextStarted = false;
+
+        function setupSynths() {
+             if (typeof Tone === 'undefined') {
+                 console.error("Tone.js not loaded, cannot set up synths.");
+                 return;
+             }
+            try {
+                // Ensure previous synths are disposed if re-initializing
+                if (hoverSynth) hoverSynth.dispose();
+                if (clickSynth) clickSynth.dispose();
+
+                hoverSynth = new Tone.Synth({
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 }
+                }).toDestination();
+                hoverSynth.volume.value = -5; // Increased volume
+
+                clickSynth = new Tone.PluckSynth({
+                     attackNoise: 0.5,
+                     dampening: 4000,
+                     resonance: 0.7
+                }).toDestination();
+                 clickSynth.volume.value = 0; // Increased volume (max)
+                console.log("Synths configured.");
+
+             } catch (error) {
+                 console.error("Error setting up Tone.js synths:", error);
+             }
+        }
+
+        async function startAudioContext() {
+            // Check if Tone is loaded and context is not already running
+            if (!isAudioContextStarted && typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                console.log("Attempting to start audio context...");
+                try {
+                    await Tone.start();
+                    console.log(`Audio context started successfully. State: ${Tone.context.state}`);
+                    isAudioContextStarted = true;
+
+                    // Play silent buffer to ensure playback is possible
+                    const audioCtx = Tone.context;
+                    const buffer = audioCtx.createBuffer(1, 1, audioCtx.sampleRate); // 1 frame buffer
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(audioCtx.destination);
+                    source.start(0);
+                    console.log("Silent buffer played.");
+
+                    // Ensure synths are ready
+                    setupSynths();
+
+                } catch (error) {
+                    console.error("Error starting audio context or playing silent buffer:", error);
+                    // Optionally disable audio features visually if context fails
+                }
+            } else if (typeof Tone === 'undefined') {
+                 console.error("Tone.js not available to start audio context.");
+            } else {
+                 console.log(`Audio context already started or in state: ${Tone.context.state}`);
+                 // Ensure synths are ready even if context was already started
+                 if (!hoverSynth || !clickSynth) {
+                    setupSynths();
+                 }
+            }
+        }
+
+
+        function getFeatureTitle(feature) {
+             switch (feature) {
+                case "dashboard": return "Personal Dashboard";
+                case "ui": return "Aesthetic UI";
+                case "streaks": return "Streaks & Motivation";
+                case "vibes": return "Study Vibes";
+                case "quickadd": return "Quick Add";
+                case "reflection": return "Daily Reflection";
+                case "eastereggs": return "Easter Eggs";
+                case "widgets": return "Widgets";
+                default: return defaultTitle;
+            }
+        }
+
+        function getFeatureSubtitle(feature) {
+             switch (feature) {
+                case "dashboard": return "Your space: tasks, events, mood & more.";
+                case "ui": return "Customize themes, enjoy smooth visuals.";
+                case "streaks": return "Build habits, stay motivated, feel rewarded.";
+                case "vibes": return "Focus sounds, timers & mood themes.";
+                case "quickadd": return "Add tasks, notes & timers instantly.";
+                case "reflection": return "Track mood, journal thoughts, build awareness.";
+                case "eastereggs": return "Fun surprises & interactions that delight.";
+                case "widgets": return "See key info at a glance on your screen.";
+                default: return defaultSubtitle;
+            }
+        }
+
+        function updateCenterText(title, subtitle) {
+            const displayTitle = typeof title === 'string' ? title : defaultTitle;
+            const displaySubtitle = typeof subtitle === 'string' ? subtitle : defaultSubtitle;
+            orbitCenter.innerHTML = `
+                <div class="feature-orbit-center-title">${displayTitle}</div>
+                <p class="feature-orbit-subtitle">${displaySubtitle}</p>
+            `;
+        }
+
+        function setItemTransform(item, x, y, scale = 1) {
+            const validScale = typeof scale === 'number' && !isNaN(scale) ? scale : 1;
+            item.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${validScale})`;
+        }
+
+        function calculateRadii() {
+            if (orbitCenter.offsetWidth === 0) return false;
+            const centerRadius = orbitCenter.offsetWidth / 2;
+            const itemRadius = orbitItems[0] ? orbitItems[0].offsetWidth / 2 : 35;
+            const gap = 15;
+            orbitRadius = centerRadius + itemRadius + gap;
+            innerRadius = centerRadius - 10;
+            return true;
+        }
+
+        function applyTheme(themeIndex) {
+            const theme = themes[themeIndex % themes.length];
+            const rootStyle = document.documentElement.style;
+            for (const [key, value] of Object.entries(theme)) {
+                rootStyle.setProperty(key, value);
+            }
+        }
+
+        function initializeSmallIcons() {
+            smallIconContainer.innerHTML = '';
+            smallIcons.length = 0;
+            if (innerRadius <= 0) return;
+
+            for (let i = 0; i < NUM_SMALL_ICONS; i++) {
+                const element = document.createElement('div');
+                element.classList.add('small-icon');
+                element.innerHTML = smallIconSVGs[i % smallIconSVGs.length];
+
+                const angle = Math.random() * 2 * Math.PI;
+                const radius = Math.random() * innerRadius;
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+
+                const velocityAngle = Math.random() * 2 * Math.PI;
+                const dx = Math.cos(velocityAngle) * SMALL_ICON_SPEED;
+                const dy = Math.sin(velocityAngle) * SMALL_ICON_SPEED;
+
+                smallIcons.push({ element, x, y, dx, dy });
+                smallIconContainer.appendChild(element);
+                setItemTransform(element, x, y);
+            }
+             addSmallIconListeners();
+        }
+
+        function calculateInitialPositions() {
+             if (!calculateRadii()) {
+                setTimeout(calculateInitialPositions, 100);
+                return;
+            }
+            const itemCount = orbitItems.length;
+            const angleIncrement = (2 * Math.PI) / itemCount;
+
+            orbitItems.forEach((item, index) => {
+                const angle = index * angleIncrement - Math.PI / 2;
+                item.dataset.initialAngle = angle;
+                item.dataset.targetScale = 1;
+            });
+
+            initializeSmallIcons();
+        }
+
+        function animateOrbit(timestamp) {
+            const currentGlobalAngle = (timestamp * rotationSpeed) % (2 * Math.PI);
+
+            orbitItems.forEach(item => {
+                const initialAngle = parseFloat(item.dataset.initialAngle);
+                const targetScale = parseFloat(item.dataset.targetScale) || 1;
+                if (!isNaN(initialAngle)) {
+                    const newAngle = initialAngle + currentGlobalAngle;
+                    const x = orbitRadius * Math.cos(newAngle);
+                    const y = orbitRadius * Math.sin(newAngle);
+                    setItemTransform(item, x, y, targetScale);
+                }
+            });
+
+            smallIcons.forEach(icon => {
+                if (icon.element.classList.contains('disrupted')) return;
+
+                icon.x += icon.dx;
+                icon.y += icon.dy;
+
+                const distanceFromCenter = Math.sqrt(icon.x * icon.x + icon.y * icon.y);
+                if (distanceFromCenter > innerRadius) {
+                    const normalX = icon.x / distanceFromCenter;
+                    const normalY = icon.y / distanceFromCenter;
+                    const dotProduct = icon.dx * normalX + icon.dy * normalY;
+                    icon.dx -= 2 * dotProduct * normalX;
+                    icon.dy -= 2 * dotProduct * normalY;
+                    icon.x = normalX * innerRadius;
+                    icon.y = normalY * innerRadius;
+                }
+                 setItemTransform(icon.element, icon.x, icon.y);
+            });
+
+            animationFrameId = requestAnimationFrame(animateOrbit);
+        }
+
+        function resetSmallIcon(icon) {
+            icon.element.classList.remove('disrupted');
+            const angle = Math.random() * 2 * Math.PI;
+            const radius = Math.random() * innerRadius;
+            icon.x = radius * Math.cos(angle);
+            icon.y = radius * Math.sin(angle);
+            const velocityAngle = Math.random() * 2 * Math.PI;
+            icon.dx = Math.cos(velocityAngle) * SMALL_ICON_SPEED;
+            icon.dy = Math.sin(velocityAngle) * SMALL_ICON_SPEED;
+            setItemTransform(icon.element, icon.x, icon.y);
+        }
+
+        function addMainIconListeners() {
+             orbitItems.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    const feature = item.dataset.feature;
+                    const title = getFeatureTitle(feature);
+                    const subtitle = getFeatureSubtitle(feature);
+                    updateCenterText(title, subtitle);
+                    orbitContainer.classList.add('is-hovering');
+                    orbitItems.forEach(sibling => {
+                        if (sibling === item) {
+                            sibling.dataset.targetScale = 1.2;
+                            sibling.classList.add('hover-target');
+                        } else {
+                            sibling.dataset.targetScale = 0.9;
+                            sibling.classList.remove('hover-target');
+                        }
+                    });
+
+                    if (isAudioContextStarted && hoverSynth) {
+                         console.log("Triggering hover sound");
+                        try {
+                            // Ensure synth is ready before triggering
+                            if(hoverSynth.loaded) {
+                                hoverSynth.triggerAttackRelease('C5', '8n', Tone.now());
+                            } else {
+                                console.warn("Hover synth not loaded yet");
+                            }
+                        } catch(e) { console.error("Hover synth error:", e); }
+                    }
+                });
+
+                item.addEventListener('mouseleave', () => {
+                    updateCenterText(defaultTitle, defaultSubtitle);
+                    orbitContainer.classList.remove('is-hovering');
+                    orbitItems.forEach(anyItem => {
+                        anyItem.dataset.targetScale = 1;
+                        anyItem.classList.remove('hover-target');
+                    });
+                });
+
+                item.addEventListener('click', (event) => {
+                    const feature = item.dataset.feature;
+
+                    if (feature === 'ui') {
+                        currentThemeIndex++;
+                        applyTheme(currentThemeIndex);
+                        console.log(`Changed to theme index: ${currentThemeIndex % themes.length}`);
+                    }
+
+                    console.log(`Clicked on feature: ${feature}`);
+                    item.classList.add('active');
+                    updateCenterText(getFeatureTitle(feature), getFeatureSubtitle(feature));
+                    if ("vibrate" in navigator) navigator.vibrate(50);
+                    orbitCenter.classList.add('rotate');
+                    setTimeout(() => orbitCenter.classList.remove('rotate'), 600);
+                    setTimeout(() => {
+                        item.classList.remove('active');
+                        const currentScale = item.matches(':hover') ? 1.2 : 1;
+                        item.dataset.targetScale = currentScale;
+                        if (!item.matches(':hover')) {
+                             updateCenterText(defaultTitle, defaultSubtitle);
+                             orbitItems.forEach(anyItem => {
+                                if (anyItem !== item) anyItem.dataset.targetScale = 1;
+                             });
+                        }
+                    }, 300);
+                });
+            });
+        }
+
+        function addSmallIconListeners() {
+            smallIcons.forEach(icon => {
+                icon.element.addEventListener('click', (event) => {
+                     event.stopPropagation();
+                    icon.element.classList.add('disrupted');
+                     if ("vibrate" in navigator) navigator.vibrate(20);
+
+                    if (isAudioContextStarted && clickSynth) {
+                         console.log("Triggering click sound");
+                         try {
+                             // Ensure synth is ready before triggering
+                            if(clickSynth.loaded) {
+                                clickSynth.triggerAttackRelease('C4', '16n', Tone.now());
+                            } else {
+                                console.warn("Click synth not loaded yet");
+                            }
+                         } catch(e) { console.error("Click synth error:", e); }
+                    }
+
+                    setTimeout(() => {
+                       resetSmallIcon(icon);
+                    }, 300);
+                });
+            });
+        }
+
+        function addGlobalListeners() {
+             let resizeTimeout;
+             window.addEventListener('resize', () => {
+                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                 clearTimeout(resizeTimeout);
+                 resizeTimeout = setTimeout(() => {
+                     if(calculateRadii()) {
+                         calculateInitialPositions();
+                         if (!document.hidden) {
+                             animationFrameId = requestAnimationFrame(animateOrbit);
+                         }
+                     } else {
+                           console.warn("Resize failed, center dimensions not ready.");
+                     }
+                 }, 250);
+             });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animationFrameId) {
+                         cancelAnimationFrame(animationFrameId);
+                         animationFrameId = null;
+                    }
+                } else {
+                    if (!animationFrameId) {
+                        if(orbitRadius > 0 || calculateRadii()) {
+                             animationFrameId = requestAnimationFrame(animateOrbit);
+                        } else {
+                             console.warn("Visibility change restart failed, radii not ready.");
+                             init();
+                        }
+                    }
+                }
+            });
+
+             const startAudioHandler = async () => { // Make handler async
+                 await startAudioContext(); // Wait for context to start
+                 // Listener is automatically removed by { once: true }
+             };
+             orbitContainer.addEventListener('click', startAudioHandler, { once: true });
+             orbitContainer.addEventListener('touchstart', startAudioHandler, { once: true });
+        }
+
+        function init() {
+            applyTheme(currentThemeIndex);
+            updateCenterText(defaultTitle, defaultSubtitle);
+             if (typeof Tone !== 'undefined') {
+                 setupSynths(); // Setup synths on initial load
+             } else {
+                 console.error("Tone.js not loaded!");
+             }
+            calculateInitialPositions();
+            addMainIconListeners();
+            addGlobalListeners();
+
+            if (!document.hidden && (orbitRadius > 0 || calculateRadii())) {
+                 animationFrameId = requestAnimationFrame(animateOrbit);
+            } else if (orbitRadius === 0) {
+                 console.warn("Initial animation start delayed, radii not ready.");
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+    </script>
+</body>
+</html>
